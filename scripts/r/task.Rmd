@@ -1,0 +1,216 @@
+---
+title: "Data Analyst - Technical Assessment"
+output: html_document
+date: "2025-10-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Test Dataset Into Memory
+
+```{r}
+library(readxl)
+library(janitor)
+library(dplyr)
+library(skimr)
+
+
+test_file <- "../../test-data.xlsx"
+
+loans_raw <- read_xlsx(test_file, sheet = 1L) |>
+    clean_names()
+cashflows_raw <- read_xlsx(test_file, sheet = 2L) |>
+    clean_names()
+
+```
+
+## Inspect Data
+
+```{r}
+skim(loans_raw)
+```
+
+```{r}
+skim(cashflows_raw)
+```
+
+## Task 1 - Restructure Loan Data
+
+The client has provided us with the loan data in a format that is not compatible
+with our internal loan data schema. In particular, the data provided by the
+client is a single table that contains the characteristics for both the loans
+and the borrowers. 
+Our internal schema specifies that the loan and borrower details should belong
+in separate tables with an additional relationship table linking them both based
+on their respective primary ids.
+
+The desired schema for the loan information is described below, where each
+key-value pair represents the field name-type belonging to each table
+
+```{r}
+target_loan_schema <- list(
+    loans = list(
+        "contract_number" = "character", # PRIMARY KEY
+        "termination_date" = "date",                   
+        "termination_reason" = "character",
+        "interest_rate" = "double",
+        "loan_amount" = "double",                        
+        "sum_of_last_payment" = "double",
+        "debt_principal" = "double",
+        "debt_interest" = "double",                      
+        "total_outstanding_and_debt_amount" = "double",
+        "proceeding_start_date" = "date",
+        "delay_days_principal" = "integer"
+    ),
+    borrowers = list(
+        "customer_id" = "character",  # PRIMARY KEY
+        "year_of_birth" = "integer",
+        "gender" = "character",
+        "number_of_customer_active_contracts" = "integer",
+        "customer_active_contract_numbers" = "character"
+    ),
+    id_loan_borrower = list(
+        "contract_number" = "character",  # PRIMARY KEY 
+        "customer_id" = "character"
+    )
+)
+```
+
+## Task 1 - Solution
+
+```{r}
+library(purrr)
+
+double_fields <- flatten(target_loan_schema) |>
+    keep(\(val) val == "double") |>
+    names()
+
+char_fields <- flatten(target_loan_schema) |>
+    keep(\(val) val == "character") |>
+    names()
+
+date_fields <- flatten(target_loan_schema) |>
+    keep(\(val) val == "date") |>
+    names()
+
+integer_fields <- flatten(target_loan_schema) |>
+    keep(\(val) val == "integer") |>
+    names()
+
+convert_double <- function(vec) {
+    if (is.numeric(vec)) return(as.double(vec))
+    as.double(gsub(",", ".", vec, fixed = TRUE))
+}
+
+loans <- loans_raw |>
+    select(all_of(names(target_loan_schema$loans))) |>
+    filter(!duplicated(.data$contract_number)) |> # Removes duplicate Ids
+    mutate(
+        across(any_of(char_fields), as.character),
+        across(any_of(integer_fields), as.integer),
+        across(any_of(date_fields), convert_to_date), # handles date type conversion
+        across(any_of(double_fields), convert_double) # handles "," decimal separator
+    )
+
+
+borrowers <- loans_raw |>
+    select(all_of(names(target_loan_schema$borrowers))) |>
+    filter(!duplicated(.data$customer_id)) |> # Removes duplicate Ids
+    mutate(
+        across(any_of(char_fields), as.character),
+        across(any_of(integer_fields), as.integer),
+    )
+
+id_loan_borrower <- loans_raw |>
+    select(all_of(names(target_loan_schema$id_loan_borrower))) |>
+    filter(!duplicated(.data$contract_number)) |> # Removes duplicate Ids
+    mutate(
+        across(any_of(char_fields), as.character),
+    )
+```
+
+
+## Task 2 - Restructure Cashflow Date
+
+Similar to the loan data, the client has provided the cash flow information
+in a format that is incompatible with out internal cash flow schema. 
+Specifically, the client has provided the data in a "wide" format where each
+cash flow date is a column. We require the data to be in a "long" format 
+according to the following schema
+
+```{r}
+target_cashflow_schema <- list(
+    cashflows = list(
+        "contract_number" = "character", # PRIMARY KEY - Component 1
+        "cashflow_date" = "date", # PRIMARY KEY - Component 2
+        "cashflow_amount" = "double"
+    )
+)
+```
+
+## Task 2 - Solution
+```{r}
+library(tidyr)
+library(lubridate)
+
+format_dates <- function(vec) {
+    dates <- gsub("x", "", vec) |>
+        paste0("_01") |>
+        as.Date(format = "%Y_%m_%d") |>
+        ceiling_date(unit = "months")
+    dates - days(1)
+}
+
+cashflows <- cashflows_raw |>
+    rename("contract_number" = "contract_nr") |> # Make loan id field name consistent
+    pivot_longer(
+        starts_with("x20"),
+        names_to = "cashflow_date",
+        values_to = "cashflow_amount"
+    ) |>
+    mutate(
+        cashflow_date = format_dates(.data$cashflow_date) # converts to last day of corresponding months
+    )
+```
+
+
+## Task 3 - Calulated Fields
+
+Although the client data set contains all of the data that we require, it is
+lacking certain fields that are needed by subsequent data processing pipelines.
+In particular, we need to generate the following fields based on the existing
+fields we have available:
+
+1. Cumulative Cash Flow Amounts - For each loan we need to have a field that
+   contains the sum of all cash flow amounts received to date.
+   
+2. Days Past Due (Buckets) - For each loan we require a field that classifies
+   the loan based on whether the field `delay_days_principal` falls into one of
+   the following buckets:
+   
+            [0, 180), [180, 360), [360, 540), [540, 720), 720+
+            
+## Task 3 - Solution
+```{r}
+cumulative_cashflow <- summarise(
+    cashflows, 
+    cumulative_cashflow_amount = sum(cashflow_amount, na.rm = TRUE),
+    .by = "contract_number"
+)
+
+loans |> 
+    left_join(cumulative_cashflow, by = "contract_number") |>
+    mutate(
+        days_past_due_bucket = cut(
+            delay_days_principal,
+            breaks = c(-Inf, 180, 360, 540, 720, Inf),
+            labels = c(
+                "[0, 180)", "[180, 360)", "[360, 540)", "[540, 720)", "720+"
+            ),
+            right = FALSE # Ensures the buckets are "closed" on the left
+        )
+    )
+
+```
