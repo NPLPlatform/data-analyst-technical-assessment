@@ -1,7 +1,7 @@
 # Standard Questions
 
-1. How comfortable would you feel if you had to reimplent your solution in the
-   other language (R / Python). What appraoch would you take?
+1. How comfortable would you feel if you had to reimplement your solution in the
+   other language (R / Python). What approach would you take?
 
 2. The dataset that you were working with represents a single "snapshot" of
    a loan portfolio. It is very often the case where we receive multiple
