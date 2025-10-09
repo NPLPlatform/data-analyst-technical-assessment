@@ -7,7 +7,7 @@ each candidate working through a series of pre-prescribed tasks independently.
 The second section involves a live discussion with some of the Accuria team
 members to discuss the candidate's solutions
 .
-All rescources required for the assessment are contained within this repository.
+All resources required for the assessment are contained within this repository.
 Including the test data, and the tasks to be completed. The only pre-requisite
 is that the candidate has access to a computer with either R or Python
 installed.
