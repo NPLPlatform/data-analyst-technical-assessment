@@ -1,0 +1,45 @@
+# Standard Questions
+
+1. How comfortable would you feel if you had to reimplent your solution in the
+   other language (R / Python). What appraoch would you take?
+
+2. The dataset that you were working with represents a single "snapshot" of
+   a loan portfolio. It is very often the case where we receive multiple
+   snapshots at regular intervals as separate datasets and are required to apply
+   the same data transformations to each snapshot. In such cases we often
+   need to include certain Input Validation Checks to confirm that the data we
+   recieve can be processed correctly. What checks would you introduce for this
+   example dataset.
+    - file names (regex)
+    - field names
+    - field types
+    - snapshot dates (avoid duplicate deliveries)
+
+3. In situations where we receive ongoing portfolio snapshots, it is often the
+   case that we need to create certain calculated fields that refer to
+   information from previous snapshots. For example, we may need to add a flag
+   for loans that have transitioned from one Days Past Due bucket to the next.
+   How would you go about implementing this?
+
+
+# Advanced Question
+
+1. If you were tasked with turning your processing script into a fully
+   automated data pipeline. What steps would you take?
+
+
+# Optional Questions (If not addressed during solution walkthrough)
+
+1. Whilst working through the tasks did you encounter any data quality issues
+   that you needed to address? If so what did you do to address them? If not,
+   how would you attempt to address them?
+    - Inconsistent date formats
+    - Missing values in cash flow table
+    - Duplicate rows
+
+2. If you did the task again, would you approach it any differently? What
+   adjustments would you make?
+
+3. How much emphasis did you place on code quality whilst completing the
+   tasks? Are there any improvements you would like to make if you had more
+   time?
