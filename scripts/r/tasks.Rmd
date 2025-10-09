@@ -89,56 +89,7 @@ target_loan_schema <- list(
 ## Task 1 - Solution
 
 ```{r}
-library(purrr)
-
-double_fields <- flatten(target_loan_schema) |>
-    keep(\(val) val == "double") |>
-    names()
-
-char_fields <- flatten(target_loan_schema) |>
-    keep(\(val) val == "character") |>
-    names()
-
-date_fields <- flatten(target_loan_schema) |>
-    keep(\(val) val == "date") |>
-    names()
-
-integer_fields <- flatten(target_loan_schema) |>
-    keep(\(val) val == "integer") |>
-    names()
-
-convert_double <- function(vec) {
-    if (is.numeric(vec)) {
-        return(as.double(vec))
-    }
-    as.double(gsub(",", ".", vec, fixed = TRUE))
-}
-
-loans <- loans_raw |>
-    select(all_of(names(target_loan_schema$loans))) |>
-    filter(!duplicated(.data$contract_number)) |> # Removes duplicate Ids
-    mutate(
-        across(any_of(char_fields), as.character),
-        across(any_of(integer_fields), as.integer),
-        across(any_of(date_fields), convert_to_date), # handles date type conversion
-        across(any_of(double_fields), convert_double) # handles "," decimal separator
-    )
-
-
-borrowers <- loans_raw |>
-    select(all_of(names(target_loan_schema$borrowers))) |>
-    filter(!duplicated(.data$customer_id)) |> # Removes duplicate Ids
-    mutate(
-        across(any_of(char_fields), as.character),
-        across(any_of(integer_fields), as.integer),
-    )
-
-id_loan_borrower <- loans_raw |>
-    select(all_of(names(target_loan_schema$id_loan_borrower))) |>
-    filter(!duplicated(.data$contract_number)) |> # Removes duplicate Ids
-    mutate(
-        across(any_of(char_fields), as.character),
-    )
+# INSERT CODE HERE
 ```
 
 
@@ -162,27 +113,7 @@ target_cashflow_schema <- list(
 
 ## Task 2 - Solution
 ```{r}
-library(tidyr)
-library(lubridate)
-
-format_dates <- function(vec) {
-    dates <- gsub("x", "", vec) |>
-        paste0("_01") |>
-        as.Date(format = "%Y_%m_%d") |>
-        ceiling_date(unit = "months")
-    dates - days(1)
-}
-
-cashflows <- cashflows_raw |>
-    rename("contract_number" = "contract_nr") |> # Make loan id field name consistent
-    pivot_longer(
-        starts_with("x20"),
-        names_to = "cashflow_date",
-        values_to = "cashflow_amount"
-    ) |>
-    mutate(
-        cashflow_date = format_dates(.data$cashflow_date) # converts to last day of corresponding months
-    )
+# INSERT CODE HERE
 ```
 
 
@@ -204,22 +135,5 @@ fields we have available:
 
 ## Task 3 - Solution
 ```{r}
-cumulative_cashflow <- summarise(
-    cashflows,
-    cumulative_cashflow_amount = sum(cashflow_amount, na.rm = TRUE),
-    .by = "contract_number"
-)
-
-loans |>
-    left_join(cumulative_cashflow, by = "contract_number") |>
-    mutate(
-        days_past_due_bucket = cut(
-            delay_days_principal,
-            breaks = c(-Inf, 180, 360, 540, 720, Inf),
-            labels = c(
-                "[0, 180)", "[180, 360)", "[360, 540)", "[540, 720)", "720+"
-            ),
-            right = FALSE # Ensures the buckets are "closed" on the left
-        )
-    )
+# INSERT CODE HERE
 ```

@@ -7,19 +7,19 @@ each candidate working through a series of pre-prescribed tasks independently.
 The second section involves a live discussion with some of the Accuria team
 members to discuss the candidate's solutions
 .
-All rescources required for the assessment are contained within this repository.
+All resources required for the assessment are contained within this repository.
 Including the test data, and the tasks to be completed. The only pre-requisite
 is that the candidate has access to a computer with either R or Python
 installed.
 
 ## The Tasks
 
-Within the scripts folder you will find two subfolders called r and python.
+Within the scripts folder you will find two subfolders called `r` and `python`.
 Each folder contains the tasks to be completed using the respective language.
 In particular, within each folder there is an .Rmd / .ipynb file that contains
 some initial setup code as well as a description of the task to be completed.
 
-Each candidate can choose to complete the tasks in either R OR Python,
+Each candidate can choose to complete the tasks in either *R or Python*,
 However, please note that using R is preferred in this instance.
 
 The tasks are designed to test the candidate's ability to perform routine data
