@@ -1,0 +1,139 @@
+---
+title: "Data Analyst - Technical Assessment"
+output: html_document
+date: "2025-10-06"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## (Optional) Install Setup Packages
+
+```{r}
+install.packages("readxl")
+install.packages("janitor")
+install.packages("dplyr")
+install.packages("skimr")
+```
+
+## Load Test Dataset Into Memory
+
+```{r}
+library(readxl)
+library(janitor)
+library(dplyr)
+library(skimr)
+
+
+test_file <- "../../test-data.xlsx"
+
+loans_raw <- read_xlsx(test_file, sheet = 1L) |>
+    clean_names()
+cashflows_raw <- read_xlsx(test_file, sheet = 2L) |>
+    clean_names()
+```
+
+## Inspect Data
+
+```{r}
+skim(loans_raw)
+```
+
+```{r}
+skim(cashflows_raw)
+```
+
+## Task 1 - Restructure Loan Data
+
+The client has provided us with the loan data in a format that is not compatible
+with our internal loan data schema. In particular, the data provided by the
+client is a single table that contains the characteristics for both the loans
+and the borrowers.
+Our internal schema specifies that the loan and borrower details should belong
+in separate tables with an additional relationship table linking them both based
+on their respective primary ids.
+
+The desired schema for the loan information is described below, where each
+key-value pair represents the field name-type belonging to each table
+
+```{r}
+target_loan_schema <- list(
+    loans = list(
+        "contract_number" = "character", # PRIMARY KEY
+        "termination_date" = "date",
+        "termination_reason" = "character",
+        "interest_rate" = "double",
+        "loan_amount" = "double",
+        "sum_of_last_payment" = "double",
+        "debt_principal" = "double",
+        "debt_interest" = "double",
+        "total_outstanding_and_debt_amount" = "double",
+        "proceeding_start_date" = "date",
+        "delay_days_principal" = "integer"
+    ),
+    borrowers = list(
+        "customer_id" = "character", # PRIMARY KEY
+        "year_of_birth" = "integer",
+        "gender" = "character",
+        "number_of_customer_active_contracts" = "integer",
+        "customer_active_contract_numbers" = "character"
+    ),
+    id_loan_borrower = list(
+        "contract_number" = "character", # PRIMARY KEY
+        "customer_id" = "character"
+    )
+)
+```
+
+## Task 1 - Solution
+
+```{r}
+# INSERT CODE HERE
+```
+
+
+## Task 2 - Restructure Cashflow Date
+
+Similar to the loan data, the client has provided the cash flow information
+in a format that is incompatible with out internal cash flow schema.
+Specifically, the client has provided the data in a "wide" format where each
+cash flow date is a column. We require the data to be in a "long" format
+according to the following schema
+
+```{r}
+target_cashflow_schema <- list(
+    cashflows = list(
+        "contract_number" = "character", # PRIMARY KEY - Component 1
+        "cashflow_date" = "date", # PRIMARY KEY - Component 2
+        "cashflow_amount" = "double"
+    )
+)
+```
+
+## Task 2 - Solution
+```{r}
+# INSERT CODE HERE
+```
+
+
+## Task 3 - Calulated Fields
+
+Although the client data set contains all of the data that we require, it is
+lacking certain fields that are needed by subsequent data processing pipelines.
+In particular, we need to generate the following fields based on the existing
+fields we have available:
+
+1. Cumulative Cash Flow Amounts - For each loan we need to have a field that
+   contains the sum of all cash flow amounts received to date.
+
+2. Days Past Due (Buckets) - For each loan we require a field that classifies
+   the loan based on whether the field `delay_days_principal` falls into one of
+   the following buckets:
+
+            [0, 180), [180, 360), [360, 540), [540, 720), 720+
+
+## Task 3 - Solution
+```{r}
+# INSERT CODE HERE
+```
